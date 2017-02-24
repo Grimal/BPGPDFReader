@@ -1,6 +1,15 @@
 
 ## PDF Reader Core for iOS
 
+### Brian's Updates
+
+ - Added viewDidLayoutSubviews method from Roman Stetsenko <evfemist@gmail.com> to fix issue with split view on iPad Pro, in ReaderViewController.m 
+ - Updated podspec version (but have not published this to CocoaPods)
+ - Added code from Paul Reedy to fix missed renders when quickly scrolling, handleScrollViewDidEnd method in ReaderViewController.m
+ - Incorporated changes from GitHub user reganApe, to refactor in Apple UIKit navbar and toolbar, clean up delegate and button action code
+ - Incorporated changes from GitHub user nelson-chim, to make print/email/export options configurable
+ - Added a class method to save a PDF to disk
+
 ### Introduction
 
 I've crafted this open source PDF reader code for fellow iOS
@@ -122,9 +131,6 @@ all of the following iOS frameworks are required:
 ### Compile Time Options
 
 In ReaderConstants.h the following #define options are available:
-
-`READER_FLAT_UI` - If TRUE, follows the Fuglyosity of Flat Fad
-(flattens the UI).
 
 `READER_SHOW_SHADOWS` - If TRUE, a shadow is shown around each page
 and page thumbnail.

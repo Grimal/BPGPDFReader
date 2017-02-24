@@ -40,6 +40,8 @@
 @interface ReaderViewController : UIViewController
 
 @property (nonatomic, weak, readwrite) id <ReaderViewControllerDelegate> delegate;
+@property (nonatomic, strong) NSArray<UIBarButtonItem *> *additionalLeftToolbarItems;
+@property (nonatomic, strong) NSArray<UIBarButtonItem *> *additionalRightToolbarItems;
 
 - (instancetype)initWithReaderDocument:(ReaderDocument *)object;
 

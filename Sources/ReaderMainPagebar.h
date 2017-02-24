@@ -32,7 +32,7 @@
 @class ReaderPagebarThumb;
 @class ReaderDocument;
 
-@protocol ReaderMainPagebarDelegate <NSObject>
+@protocol ReaderMainPagebarDelegate <UIToolbarDelegate>
 
 @required // Delegate protocols
 
@@ -40,7 +40,7 @@
 
 @end
 
-@interface ReaderMainPagebar : UIView
+@interface ReaderMainPagebar : UIToolbar
 
 @property (nonatomic, weak, readwrite) id <ReaderMainPagebarDelegate> delegate;
 
@@ -74,15 +74,5 @@
 @interface ReaderPagebarThumb : ReaderThumbView
 
 - (instancetype)initWithFrame:(CGRect)frame small:(BOOL)small;
-
-@end
-
-#pragma mark -
-
-//
-//	ReaderPagebarShadow class interface
-//
-
-@interface ReaderPagebarShadow : UIView
 
 @end

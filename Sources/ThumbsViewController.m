@@ -228,7 +228,7 @@
 
 #pragma mark - ThumbsMainToolbarDelegate methods
 
-- (void)tappedInToolbar:(ThumbsMainToolbar *)toolbar showControl:(UISegmentedControl *)control
+- (void)showControlChanged:(UISegmentedControl *)control
 {
 	switch (control.selectedSegmentIndex)
 	{
@@ -270,7 +270,7 @@
 	}
 }
 
-- (void)tappedInToolbar:(ThumbsMainToolbar *)toolbar doneButton:(UIButton *)button
+- (void)doneButtonTapped:(UIBarButtonItem *)button
 {
 	[delegate dismissThumbsViewController:self]; // Dismiss thumbs display
 }

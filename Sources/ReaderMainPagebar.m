@@ -63,22 +63,7 @@
 #define PAGE_NUMBER_SPACE_SMALL 16.0f
 #define PAGE_NUMBER_SPACE_LARGE 32.0f
 
-#define SHADOW_HEIGHT 4.0f
-
-#pragma mark - Properties
-
-@synthesize delegate;
-
-#pragma mark - ReaderMainPagebar class methods
-
-+ (Class)layerClass
-{
-#if (READER_FLAT_UI == FALSE) // Option
-	return [CAGradientLayer class];
-#else
-	return [CALayer class];
-#endif // end of READER_FLAT_UI Option
-}
+@dynamic delegate;
 
 #pragma mark - ReaderMainPagebar instance methods
 
@@ -153,36 +138,6 @@
 		self.userInteractionEnabled = YES;
 		self.contentMode = UIViewContentModeRedraw;
 		self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
-
-		if ([self.layer isKindOfClass:[CAGradientLayer class]])
-		{
-			self.backgroundColor = [UIColor clearColor];
-
-			CAGradientLayer *layer = (CAGradientLayer *)self.layer;
-			UIColor *liteColor = [UIColor colorWithWhite:0.82f alpha:0.8f];
-			UIColor *darkColor = [UIColor colorWithWhite:0.32f alpha:0.8f];
-			layer.colors = [NSArray arrayWithObjects:(id)liteColor.CGColor, (id)darkColor.CGColor, nil];
-
-			CGRect shadowRect = self.bounds; shadowRect.size.height = SHADOW_HEIGHT; shadowRect.origin.y -= shadowRect.size.height;
-
-			ReaderPagebarShadow *shadowView = [[ReaderPagebarShadow alloc] initWithFrame:shadowRect];
-
-			[self addSubview:shadowView]; // Add shadow to toolbar
-		}
-		else // Follow The Fuglyosity of Flat Fad
-		{
-			self.backgroundColor = [UIColor colorWithWhite:0.94f alpha:0.94f];
-
-			CGRect lineRect = self.bounds; lineRect.size.height = 1.0f; lineRect.origin.y -= lineRect.size.height;
-
-			UIView *lineView = [[UIView alloc] initWithFrame:lineRect];
-			lineView.autoresizesSubviews = NO;
-			lineView.userInteractionEnabled = NO;
-			lineView.contentMode = UIViewContentModeRedraw;
-			lineView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-			lineView.backgroundColor = [UIColor colorWithWhite:0.64f alpha:0.94f];
-			[self addSubview:lineView];
-		}
 
 		CGFloat space = (([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) ? PAGE_NUMBER_SPACE_LARGE : PAGE_NUMBER_SPACE_SMALL);
 		CGFloat numberY = (0.0f - (PAGE_NUMBER_HEIGHT + space)); CGFloat numberX = ((self.bounds.size.width - PAGE_NUMBER_WIDTH) * 0.5f);
@@ -402,7 +357,7 @@
 
 	if (trackControl.tag != [document.pageNumber integerValue]) // Only if different
 	{
-		[delegate pagebar:self gotoPage:trackControl.tag]; // Go to document page
+		[self.delegate pagebar:self gotoPage:trackControl.tag]; // Go to document page
 	}
 }
 
@@ -478,7 +433,7 @@
 	{
 		trackView.userInteractionEnabled = NO; // Disable track control interaction
 
-		[delegate pagebar:self gotoPage:trackView.tag]; // Go to document page
+		[self.delegate pagebar:self gotoPage:trackView.tag]; // Go to document page
 
 		[self startEnableTimer]; // Start track control enable timer
 	}
@@ -601,42 +556,5 @@
 	return self;
 }
 
-@end
-
-#pragma mark -
-
-//
-//	ReaderPagebarShadow class implementation
-//
-
-@implementation ReaderPagebarShadow
-
-#pragma mark - ReaderPagebarShadow class methods
-
-+ (Class)layerClass
-{
-	return [CAGradientLayer class];
-}
-
-#pragma mark - ReaderPagebarShadow instance methods
-
-- (instancetype)initWithFrame:(CGRect)frame
-{
-	if ((self = [super initWithFrame:frame]))
-	{
-		self.autoresizesSubviews = NO;
-		self.userInteractionEnabled = NO;
-		self.contentMode = UIViewContentModeRedraw;
-		self.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-		self.backgroundColor = [UIColor clearColor];
-
-		CAGradientLayer *layer = (CAGradientLayer *)self.layer;
-		UIColor *blackColor = [UIColor colorWithWhite:0.42f alpha:1.0f];
-		UIColor *clearColor = [UIColor colorWithWhite:0.42f alpha:0.0f];
-		layer.colors = [NSArray arrayWithObjects:(id)clearColor.CGColor, (id)blackColor.CGColor, nil];
-	}
-
-	return self;
-}
 
 @end

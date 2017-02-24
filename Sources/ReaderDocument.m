@@ -71,7 +71,6 @@
 @synthesize password = _password;
 @synthesize filePath = _filePath;
 @dynamic fileName, fileURL;
-@dynamic canEmail, canExport, canPrint;
 
 #pragma mark - ReaderDocument class methods
 
@@ -187,6 +186,62 @@
 	return state;
 }
 
++ (void)savePDFDocument:(CGPDFDocumentRef)document fileURL:(NSURL *)fileURL {
+    CFMutableDataRef mutableData = CFDataCreateMutable(NULL, 0);
+    CGDataConsumerRef dataConsumer = CGDataConsumerCreateWithCFData(mutableData);
+    
+    if (CGPDFDocumentGetNumberOfPages(document) > 0)
+    {
+        CGPDFPageRef page = CGPDFDocumentGetPage(document, 1); //Pages are numbered starting at 1
+        CGRect pageRect = CGPDFPageGetBoxRect(page, kCGPDFMediaBox);
+        CGContextRef pdfContext = CGPDFContextCreate(dataConsumer, &pageRect, NULL);
+        
+        //Draw the page onto the new context
+        for (int p = 1; p <= CGPDFDocumentGetNumberOfPages(document); p++) {
+            page = CGPDFDocumentGetPage(document, p); //Pages are numbered starting at 1
+            CGPDFContextBeginPage(pdfContext, NULL);
+            CGContextDrawPDFPage(pdfContext, page);
+            CGPDFContextEndPage(pdfContext);
+        }
+        
+        CGContextRelease(pdfContext); //Release before writing data to disk.
+        
+        //Write to disk
+        NSError *error = nil;
+        [[NSFileManager defaultManager]
+         createDirectoryAtURL:fileURL.URLByDeletingLastPathComponent
+         withIntermediateDirectories:YES
+         attributes:[NSDictionary dictionaryWithObjectsAndKeys:NSFileProtectionCompleteUntilFirstUserAuthentication, NSFileProtectionKey, nil]
+         error:&error];
+        if (error) {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Filesystem error"
+                                                            message:[NSString stringWithFormat:@"Unable to create cache directory\n\n%@", error.localizedDescription]
+                                                           delegate:nil
+                                                  cancelButtonTitle:@"OK"
+                                                  otherButtonTitles:nil];
+            [alert show];
+            alert = nil;
+            return;
+        }
+        
+        [(__bridge NSData *)mutableData writeToURL:fileURL options:NSDataWritingAtomic | NSDataWritingFileProtectionComplete error:&error];
+        if (error)
+            NSLog(@"PDF file was not written to disk: %@", error.localizedDescription);
+        [(AppDelegate *)[[UIApplication sharedApplication] delegate] addFileProtectionToFile:fileURL.absoluteString];
+    }
+    else
+    {
+        NSLog(@"Failed to create the document");
+    }
+    
+    //Clean up
+    CGDataConsumerRelease(dataConsumer);
+    //    CGPDFDocumentRelease(document);   We didn't retain it, so we shouldn't release it
+    CFRelease(mutableData);
+    
+    //    NSLog(@"Document %@ persisted to disk", fileURL);
+}
+
 #pragma mark - ReaderDocument instance methods
 
 - (instancetype)initWithFilePath:(NSString *)filePath password:(NSString *)phrase
@@ -257,21 +312,6 @@
 	return _fileURL;
 }
 
-- (BOOL)canEmail
-{
-	return YES;
-}
-
-- (BOOL)canExport
-{
-	return YES;
-}
-
-- (BOOL)canPrint
-{
-	return YES;
-}
-
 - (BOOL)archiveDocumentProperties
 {
 	NSString *archiveFilePath = [ReaderDocument archiveFilePath:[self fileName]];
@@ -302,6 +342,7 @@
 
 	_fileSize = [fileAttributes objectForKey:NSFileSize]; // File size (bytes)
 }
+
 
 #pragma mark - NSCoding protocol methods
 
@@ -346,6 +387,10 @@
 			_bookmarks = [_bookmarks mutableCopy];
 		else
 			_bookmarks = [NSMutableIndexSet new];
+        
+        _canEmail = YES;
+        _canExport = YES;
+        _canPrint = YES;
 	}
 
 	return self;

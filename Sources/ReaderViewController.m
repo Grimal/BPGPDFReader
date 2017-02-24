@@ -220,6 +220,11 @@
 				if ([key integerValue] != page) [contentView zoomResetAnimated:NO];
 			}
 		];
+        
+        // If a person scrolls very fast, the call to draw the content is never called.
+        // this will check to see if the current page is in contentViews, and if not, call it to be displayed
+        if(!CFArrayContainsValue((__bridge CFArrayRef)contentViews.allKeys, CFRangeMake(0, [contentViews.allKeys count]), (CFNumberRef)document.pageNumber))
+            [self layoutContentViews:scrollView];
 
 		[mainToolbar setBookmarkState:[document.bookmarks containsIndex:page]];
 
@@ -357,6 +362,10 @@
 	CGRect toolbarRect = viewRect; toolbarRect.size.height = TOOLBAR_HEIGHT;
 	mainToolbar = [[ReaderMainToolbar alloc] initWithFrame:toolbarRect document:document]; // ReaderMainToolbar
 	mainToolbar.delegate = self; // ReaderMainToolbarDelegate
+    
+    [mainToolbar addLeftToolbarItems:self.additionalLeftToolbarItems];
+    [mainToolbar addRightToolbarItems:self.additionalRightToolbarItems];
+    
 	[self.view addSubview:mainToolbar];
 
 	CGRect pagebarRect = self.view.bounds; pagebarRect.size.height = PAGEBAR_HEIGHT;
@@ -472,6 +481,16 @@
 	if (userInterfaceIdiom == UIUserInterfaceIdiomPad) if (printInteraction != nil) [printInteraction dismissAnimated:NO];
 
 	ignoreDidScroll = YES;
+}
+
+- (void)viewDidLayoutSubviews
+{
+    [super viewDidLayoutSubviews];
+    
+    if (CGSizeEqualToSize(theScrollView.contentSize, CGSizeZero) == false)
+    {
+        [self updateContentViews:theScrollView]; lastAppearSize = CGSizeZero;
+    }
 }
 
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration
@@ -710,7 +729,7 @@
 
 #pragma mark - ReaderMainToolbarDelegate methods
 
-- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar doneButton:(UIButton *)button
+- (void)doneButtonTapped:(UIBarButtonItem *)button
 {
 #if (READER_STANDALONE == FALSE) // Option
 
@@ -719,7 +738,7 @@
 #endif // end of READER_STANDALONE Option
 }
 
-- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar thumbsButton:(UIButton *)button
+- (void)thumbsButtonTapped:(UIBarButtonItem *)button
 {
 #if (READER_ENABLE_THUMBS == TRUE) // Option
 
@@ -737,7 +756,7 @@
 #endif // end of READER_ENABLE_THUMBS Option
 }
 
-- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar exportButton:(UIButton *)button
+- (void)exportButtonTapped:(UIBarButtonItem *)button
 {
 	if (printInteraction != nil) [printInteraction dismissAnimated:YES];
 
@@ -747,10 +766,10 @@
 
 	documentInteraction.delegate = self; // UIDocumentInteractionControllerDelegate
 
-	[documentInteraction presentOpenInMenuFromRect:button.bounds inView:button animated:YES];
+	[documentInteraction presentOpenInMenuFromBarButtonItem:button animated:YES];
 }
 
-- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar printButton:(UIButton *)button
+- (void)printButtonTapped:(UIBarButtonItem *)button
 {
 	if ([UIPrintInteractionController isPrintingAvailable] == YES)
 	{
@@ -771,9 +790,7 @@
 
 			if (userInterfaceIdiom == UIUserInterfaceIdiomPad) // Large device printing
 			{
-				[printInteraction presentFromRect:button.bounds inView:button animated:YES completionHandler:
-					^(UIPrintInteractionController *pic, BOOL completed, NSError *error)
-					{
+				[printInteraction presentFromBarButtonItem:button animated:YES completionHandler:^(UIPrintInteractionController * _Nonnull printInteractionController, BOOL completed, NSError * _Nullable error) {
 						#ifdef DEBUG
 							if ((completed == NO) && (error != nil)) NSLog(@"%s %@", __FUNCTION__, error);
 						#endif
@@ -795,7 +812,7 @@
 	}
 }
 
-- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar emailButton:(UIButton *)button
+- (void)emailButtonTapped:(UIBarButtonItem *)button
 {
 	if ([MFMailComposeViewController canSendMail] == NO) return;
 
@@ -827,7 +844,7 @@
 	}
 }
 
-- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar markButton:(UIButton *)button
+- (void)markButtonTapped:(UIBarButtonItem *)button
 {
 #if (READER_BOOKMARKS == TRUE) // Option
 

@@ -25,25 +25,23 @@
 
 #import <UIKit/UIKit.h>
 
-#import "UIXToolbarView.h"
-
 @class ReaderMainToolbar;
 @class ReaderDocument;
 
-@protocol ReaderMainToolbarDelegate <NSObject>
+@protocol ReaderMainToolbarDelegate <UINavigationBarDelegate>
 
 @required // Delegate protocols
 
-- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar doneButton:(UIButton *)button;
-- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar thumbsButton:(UIButton *)button;
-- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar exportButton:(UIButton *)button;
-- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar printButton:(UIButton *)button;
-- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar emailButton:(UIButton *)button;
-- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar markButton:(UIButton *)button;
+- (void)doneButtonTapped:(UIBarButtonItem *)button;
+- (void)thumbsButtonTapped:(UIBarButtonItem *)button;
+- (void)exportButtonTapped:(UIBarButtonItem *)button;
+- (void)printButtonTapped:(UIBarButtonItem *)button;
+- (void)emailButtonTapped:(UIBarButtonItem *)button;
+- (void)markButtonTapped:(UIBarButtonItem *)button;
 
 @end
 
-@interface ReaderMainToolbar : UIXToolbarView
+@interface ReaderMainToolbar : UINavigationBar
 
 @property (nonatomic, weak, readwrite) id <ReaderMainToolbarDelegate> delegate;
 
@@ -53,5 +51,8 @@
 
 - (void)hideToolbar;
 - (void)showToolbar;
+
+- (void)addLeftToolbarItems:(NSArray <UIBarButtonItem *> *)barButtonItems;
+- (void)addRightToolbarItems:(NSArray <UIBarButtonItem *> *)barButtonItems;
 
 @end
