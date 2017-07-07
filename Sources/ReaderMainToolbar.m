@@ -101,7 +101,8 @@
             [rightBarButtonItems addObject:exportButton];
         }
         
-        UINavigationItem *item = [[UINavigationItem alloc] initWithTitle:[document.fileName stringByDeletingPathExtension]];
+//        UINavigationItem *item = [[UINavigationItem alloc] initWithTitle:[document.fileName stringByDeletingPathExtension]];
+        UINavigationItem *item = [[UINavigationItem alloc] init];
         item.leftBarButtonItems = leftBarButtonItems;
         item.rightBarButtonItems = rightBarButtonItems;
         
