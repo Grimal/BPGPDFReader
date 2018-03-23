@@ -285,7 +285,8 @@
 
 						NSString *target = [NSString stringWithCString:uri encoding:NSUTF8StringEncoding]; // NSString - UTF8
 
-						linkTarget = [NSURL URLWithString:[target stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+//                        linkTarget = [NSURL URLWithString:[target stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+                        linkTarget = [NSURL URLWithString:[target stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLPathAllowedCharacterSet]]];
 
 						if (linkTarget == nil) NSLog(@"%s Bad URI '%@'", __FUNCTION__, target);
 					}
@@ -479,7 +480,7 @@
 			}
 			else // Error out with a diagnostic
 			{
-				CGPDFDocumentRelease(_PDFDocRef), _PDFDocRef = NULL;
+                (void)(CGPDFDocumentRelease(_PDFDocRef)), _PDFDocRef = NULL;
 
 				NSAssert(NO, @"CGPDFPageRef == NULL");
 			}
@@ -512,9 +513,8 @@
 
 - (void)dealloc
 {
-	CGPDFPageRelease(_PDFPageRef), _PDFPageRef = NULL;
-
-	CGPDFDocumentRelease(_PDFDocRef), _PDFDocRef = NULL;
+    (void)CGPDFPageRelease(_PDFPageRef), _PDFPageRef = NULL;
+    (void)CGPDFDocumentRelease(_PDFDocRef), _PDFDocRef = NULL;
 }
 
 #if (READER_DISABLE_RETINA == TRUE) // Option
@@ -537,10 +537,14 @@
 	CGContextFillRect(context, CGContextGetClipBoundingBox(context)); // Fill
 
 	//NSLog(@"%s %@", __FUNCTION__, NSStringFromCGRect(CGContextGetClipBoundingBox(context)));
+    __block CGRect viewRect = CGRectZero;
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        viewRect = self.bounds;
+    });
 
-	CGContextTranslateCTM(context, 0.0f, self.bounds.size.height); CGContextScaleCTM(context, 1.0f, -1.0f);
+    CGContextTranslateCTM(context, 0.0f, viewRect.size.height); CGContextScaleCTM(context, 1.0f, -1.0f);
 
-	CGContextConcatCTM(context, CGPDFPageGetDrawingTransform(_PDFPageRef, kCGPDFCropBox, self.bounds, 0, true));
+    CGContextConcatCTM(context, CGPDFPageGetDrawingTransform(_PDFPageRef, kCGPDFCropBox, viewRect, 0, true));
 
 	//CGContextSetRenderingIntent(context, kCGRenderingIntentDefault); CGContextSetInterpolationQuality(context, kCGInterpolationDefault);
 
