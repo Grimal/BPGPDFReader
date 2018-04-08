@@ -25,7 +25,10 @@
 
 #import <Foundation/Foundation.h>
 
+
 @interface ReaderDocumentOutline : NSObject <NSObject>
+
+void logDictionaryEntry(const char *key, CGPDFObjectRef object, void *info);
 
 + (NSArray *)outlineFromFileURL:(NSURL *)fileURL password:(NSString *)phrase;
 

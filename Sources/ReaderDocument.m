@@ -214,13 +214,10 @@
          attributes:[NSDictionary dictionaryWithObjectsAndKeys:NSFileProtectionCompleteUntilFirstUserAuthentication, NSFileProtectionKey, nil]
          error:&error];
         if (error) {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Filesystem error"
-                                                            message:[NSString stringWithFormat:@"Unable to create cache directory\n\n%@", error.localizedDescription]
-                                                           delegate:nil
-                                                  cancelButtonTitle:@"OK"
-                                                  otherButtonTitles:nil];
-            [alert show];
-            alert = nil;
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Filesystem error" message:[NSString stringWithFormat:@"Unable to create cache directory\n\n%@", error.localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
+            [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+            NSAssert(false, @"No viewController to present this on!");
+            //[self presentViewController:alert animated:YES completion:nil];
             return;
         }
         
