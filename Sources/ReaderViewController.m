@@ -603,12 +603,11 @@
 						}
 					}
 
-					if ([[UIApplication sharedApplication] openURL:url] == NO)
-					{
-						#ifdef DEBUG
-							NSLog(@"%s '%@'", __FUNCTION__, url); // Bad or unknown URL
-						#endif
-					}
+                    [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:^(BOOL success) {
+#ifdef DEBUG
+                        if (!success) NSLog(@"%s '%@'", __FUNCTION__, url); // Bad or unknown URL
+#endif
+                    }];
 				}
 				else // Not a URL, so check for another possible object type
 				{
@@ -786,7 +785,7 @@
 
 			printInteraction.printInfo = printInfo;
 			printInteraction.printingItem = fileURL;
-			printInteraction.showsPageRange = YES;
+//            printInteraction.showsPageRange = YES;
 
 			if (userInterfaceIdiom == UIUserInterfaceIdiomPad) // Large device printing
 			{
