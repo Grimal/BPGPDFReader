@@ -9,6 +9,7 @@
  - Incorporated changes from GitHub user reganApe, to refactor in Apple UIKit navbar and toolbar, clean up delegate and button action code
  - Incorporated changes from GitHub user nelson-chim, to make print/email/export options configurable
  - Added a class method to save a PDF to disk
+ - Added a rough implementation of part number linking, using code from Marcus Hedenström ![KurtCode PDFKitten](https://github.com/KurtCode/PDFKitten)
 
 ### Introduction
 
