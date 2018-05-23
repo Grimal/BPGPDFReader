@@ -27,10 +27,13 @@
 #import "ReaderContentPage.h"
 #import "ReaderContentTile.h"
 #import "CGPDFDocument.h"
+#import "ReaderContentScanner.h"
+#import "Selection.h"
 
 @implementation ReaderContentPage
 {
-	NSMutableArray *_links;
+    NSMutableArray<ReaderDocumentLink *> *_links;
+    NSMutableArray<NSDictionary *> *_partNumberLinks;
 
 	CGPDFDocumentRef _PDFDocRef;
 
@@ -169,7 +172,7 @@
 			}
 		}
 
-		//[self highlightPageLinks]; // Link support debugging
+		[self highlightPageLinks]; // Link support debugging
 	}
 }
 
@@ -388,7 +391,7 @@
 
 	if (recognizer.state == UIGestureRecognizerStateRecognized)
 	{
-		if (_links.count > 0) // Process the single tap
+		if (_links.count > 0) // Process the single tap on an annotation link
 		{
 			CGPoint point = [recognizer locationInView:self];
 
@@ -399,7 +402,18 @@
 					result = [self annotationLinkTarget:link.dictionary]; break;
 				}
 			}
-		}
+		} else if (_partNumberLinks.count > 0) // Process the single tap on a part number link
+        {
+            CGPoint point = [recognizer locationInView:self];
+
+            for (NSDictionary *link in _partNumberLinks) // Enumerate links
+            {
+                if (CGRectContainsPoint([link[@"Rect"] CGRectValue], point) == true) // Found it
+                {
+                    result = link[@"URI"]; break;
+                }
+            }
+        }
 	}
 
 	return result;
@@ -496,6 +510,50 @@
 	}
 
 	ReaderContentPage *view = [self initWithFrame:viewRect];
+
+
+    // Scan the page for TIFCO part numbers:
+    ReaderContentScanner *pageScanner = [ReaderContentScanner scannerWithPage:_PDFPageRef];
+    NSArray<Selection *> *partNumbers = [pageScanner selectPartNumbers];
+    for (Selection *selection in partNumbers) {
+        CGRect frame = CGRectApplyAffineTransform(selection.frame, selection.transform);
+
+        CGAffineTransform t = CGAffineTransformMakeScale(1, -1);
+        t = CGAffineTransformTranslate(t,0, -self.bounds.size.height);
+        CGRect rectUIKit = CGRectApplyAffineTransform(frame, t);
+
+        NSLog(@"%s -\tPart number %@ is at %f, %f with a size of %fx%f", __PRETTY_FUNCTION__, selection.text, frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
+
+        // Change the size because it's wrong:
+        rectUIKit.size.width = 25;
+        rectUIKit.origin.x -= 2.5;
+
+        // Add a link annotation
+        NSDictionary *linkDictionary = nil;
+        @try {
+            if (![NSURL URLWithString:selection.text]) {
+                NSLog(@"%s - WTF, over?", __PRETTY_FUNCTION__);
+            }
+            linkDictionary = @{@"Rect": [NSValue valueWithCGRect:rectUIKit], @"URI": [NSURL URLWithString:[selection.text stringByTrimmingCharactersInSet:[[NSCharacterSet URLPathAllowedCharacterSet] invertedSet]] relativeToURL:[NSURL URLWithString:@"https://yoursite.com/Catalog/id/"]]};
+            if (!_partNumberLinks) _partNumberLinks = [NSMutableArray new]; // Links list array
+            [_partNumberLinks addObject:linkDictionary];
+        } @catch (NSException *exception) {
+            NSLog(@"%s - Exception caught!  %@", __PRETTY_FUNCTION__, exception.description);   // J-29 will cause this
+        }
+
+
+        UIView *partNumberLink = [[UIView alloc] initWithFrame:rectUIKit];
+        partNumberLink.autoresizesSubviews = NO;
+        partNumberLink.userInteractionEnabled = YES;
+        partNumberLink.contentMode = UIViewContentModeRedraw;
+        partNumberLink.autoresizingMask = UIViewAutoresizingNone;
+        partNumberLink.backgroundColor = [UIColor colorWithRed:1 green:0.8 blue:0 alpha:0.4];
+
+        [self addSubview:partNumberLink];
+
+    }
+
+
 
 	if (view != nil) [self buildAnnotationLinksList];
 

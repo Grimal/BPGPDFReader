@@ -42,7 +42,6 @@
 @interface ReaderDocumentLink : NSObject <NSObject>
 
 @property (nonatomic, assign, readonly) CGRect rect;
-
 @property (nonatomic, assign, readonly) CGPDFDictionaryRef dictionary;
 
 + (instancetype)newWithRect:(CGRect)linkRect dictionary:(CGPDFDictionaryRef)linkDictionary;
