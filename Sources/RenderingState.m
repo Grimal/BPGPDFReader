@@ -9,6 +9,7 @@
     if ((self = [super init]))
 	{
 		// Default values
+        self.pageMatrix = CGAffineTransformIdentity;
 		self.textMatrix = CGAffineTransformIdentity;
 		self.lineMatrix = CGAffineTransformIdentity;
         self.ctm = CGAffineTransformIdentity;
@@ -20,6 +21,7 @@
 - (id)copyWithZone:(NSZone *)zone
 {
 	RenderingState *copy = [[RenderingState alloc] init];
+    copy.pageMatrix = self.pageMatrix;
 	copy.lineMatrix = self.lineMatrix;
 	copy.textMatrix = self.textMatrix;
 	copy.leading = self.leading;
@@ -32,6 +34,7 @@
 	copy.ctm = self.ctm;
 	return copy;
 }
+
 
 /* Set the text matrix, and optionally the line matrix */
 - (void)setTextMatrix:(CGAffineTransform)matrix replaceLineMatrix:(BOOL)replace
@@ -87,6 +90,6 @@
 	return aSize;
 }
 
-@synthesize characterSpacing, wordSpacing, leading, textRise, horizontalScaling, font, fontSize, lineMatrix, textMatrix, ctm;
+@synthesize characterSpacing, wordSpacing, leading, textRise, horizontalScaling, font, fontSize, pageMatrix, lineMatrix, textMatrix, ctm;
 
 @end

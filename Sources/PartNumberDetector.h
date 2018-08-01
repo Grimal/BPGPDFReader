@@ -30,7 +30,6 @@
 - (void)setFontName:(NSString *)baseName;
 - (void)reset;
 - (void)detectedString:(NSString *)string withFontName:(NSString *)inFontName;
-- (NSString *)appendString:(NSString *)inputString;
 
 @property (nonatomic, weak) id<PartNumberDetectorDelegate> delegate;
 @property (nonatomic, retain) NSMutableString *unicodeContent;

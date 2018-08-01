@@ -28,5 +28,6 @@
 @property (nonatomic, retain) PartNumberDetector *partNumberDetector;
 @property (nonatomic, retain) NSMutableString *content;
 @property (nonatomic, retain) NSMutableArray<Selection *> *selections;
+@property (nonatomic, readonly) CGAffineTransform pageMatrix;
 
 @end

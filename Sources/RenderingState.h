@@ -2,8 +2,9 @@
 #import "Font.h"
 
 @interface RenderingState : NSObject <NSCopying> {
-	CGAffineTransform lineMatrix;
-	CGAffineTransform textMatrix;
+    CGAffineTransform pageMatrix;
+    CGAffineTransform lineMatrix;
+    CGAffineTransform textMatrix;
 	CGAffineTransform ctm;
 	CGFloat leading;
 	CGFloat wordSpacing;
@@ -13,7 +14,6 @@
 	Font *font;
 	CGFloat fontSize;
 }
-
 /* Set the text matrix and (optionally) the line matrix */
 - (void)setTextMatrix:(CGAffineTransform)matrix replaceLineMatrix:(BOOL)replace;
 
@@ -33,6 +33,7 @@
 
 
 /* Matrixes (line-, text- and global) */
+@property (nonatomic, assign) CGAffineTransform pageMatrix;
 @property (nonatomic, assign) CGAffineTransform lineMatrix;
 @property (nonatomic, assign) CGAffineTransform textMatrix;
 @property (nonatomic, assign) CGAffineTransform ctm;

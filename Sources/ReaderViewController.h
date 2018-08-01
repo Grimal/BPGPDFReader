@@ -26,13 +26,14 @@
 #import <UIKit/UIKit.h>
 
 #import "ReaderDocument.h"
+#import "ReaderMainToolbar.h"
 
 @class ReaderViewController;
 
 @protocol ReaderViewControllerDelegate <NSObject>
-
-@optional // Delegate protocols
-
+- (void)toggleDocumentFavorite:(ReaderViewController *)viewController toolbar:(ReaderMainToolbar *)toolbar;
+- (void)documentFavoriteState:(ReaderViewController *)viewController toolbar:(ReaderMainToolbar *)toolbar;
+@optional
 - (void)dismissReaderViewController:(ReaderViewController *)viewController;
 
 @end
@@ -42,6 +43,7 @@
 @property (nonatomic, weak, readwrite) id <ReaderViewControllerDelegate> delegate;
 @property (nonatomic, strong) NSArray<UIBarButtonItem *> *additionalLeftToolbarItems;
 @property (nonatomic, strong) NSArray<UIBarButtonItem *> *additionalRightToolbarItems;
+@property (nonatomic, strong) UIView *partNumberMenu;
 
 - (instancetype)initWithReaderDocument:(ReaderDocument *)object;
 

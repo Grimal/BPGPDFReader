@@ -21,7 +21,8 @@ void setWordSpacing(CGPDFScannerRef pdfScanner, void *info);
 void newLine(CGPDFScannerRef pdfScanner, void *info);
 void newLineWithLeading(CGPDFScannerRef pdfScanner, void *info);
 void newLineSetLeading(CGPDFScannerRef pdfScanner, void *info);
-void newParagraph(CGPDFScannerRef pdfScanner, void *info);
+void beginTextObject(CGPDFScannerRef pdfScanner, void *info);
+void endTextObject(CGPDFScannerRef pdfScanner, void *info);
 void setTextMatrix(CGPDFScannerRef pdfScanner, void *info);
 void printString(CGPDFScannerRef pdfScanner, void *info);
 void printStringNewLine(CGPDFScannerRef scanner, void *info);
@@ -53,8 +54,9 @@ void didScanString(CGPDFStringRef pdfString, void *info) {
     NSString *string =  [font stringWithPDFString:pdfString];
 
     // If this is a part number, say something!
-    if ([font.baseFont containsString:@"Swiss721BT-Bold"]) {
+    if ([font.baseFont containsString:@"Swiss721BT"]) {
 //        NSLog(@"%s - Found part number: %@ (%@) [%@]", __PRETTY_FUNCTION__, string, font.baseFont, font.baseFontName);
+
         [partNumberDetector detectedString:string withFontName:font.baseFont];
     }
 
@@ -131,16 +133,25 @@ CGAffineTransform getTransform(CGPDFScannerRef pdfScanner) {
 #pragma mark Text parameters
 
 void setHorizontalScale(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
 	[scanner.renderingState setHorizontalScaling:getNumber(pdfScanner)];
 }
 
 void setTextLeading(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
 	[scanner.renderingState setLeading:getNumber(pdfScanner)];
 }
 
 void setFont(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	CGPDFReal fontSize;
 	const char *fontName;
 	CGPDFScannerPopNumber(pdfScanner, &fontSize);
@@ -157,16 +168,25 @@ void setFont(CGPDFScannerRef pdfScanner, void *info) {
 }
 
 void setTextRise(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
 	[scanner.renderingState setTextRise:getNumber(pdfScanner)];
 }
 
 void setCharacterSpacing(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
 	[scanner.renderingState setCharacterSpacing:getNumber(pdfScanner)];
 }
 
 void setWordSpacing(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
 	[scanner.renderingState setWordSpacing:getNumber(pdfScanner)];
 }
@@ -175,47 +195,83 @@ void setWordSpacing(CGPDFScannerRef pdfScanner, void *info) {
 #pragma mark Set position
 
 void newLine(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
 	[scanner.renderingState newLine];
 }
 
 void newLineWithLeading(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	didScanNewLine(pdfScanner, (__bridge ReaderContentScanner *) info, NO);
 }
 
 void newLineSetLeading(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	didScanNewLine(pdfScanner, (__bridge ReaderContentScanner *) info, YES);
 }
 
-void newParagraph(CGPDFScannerRef pdfScanner, void *info) {
-	ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
-	[scanner.renderingState setTextMatrix:CGAffineTransformIdentity replaceLineMatrix:YES];
-}
-
 void setTextMatrix(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
 	[scanner.renderingState setTextMatrix:getTransform(pdfScanner) replaceLineMatrix:YES];
 }
 
+void beginTextObject(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
+    // Reset the text matrix to identity
+    ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
+    [scanner.renderingState setTextMatrix:CGAffineTransformIdentity replaceLineMatrix:YES];
+}
+
+void endTextObject(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
+    // Discard the text matrix (reset to CTM)
+    ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
+    [scanner.renderingState setTextMatrix:scanner.renderingState.ctm replaceLineMatrix:YES];
+}
 
 #pragma mark Print strings
 
 void printString(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	didScanString(getString(pdfScanner), info);
 }
 
 void printStringNewLine(CGPDFScannerRef scanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	newLine(scanner, info);
 	printString(scanner, info);
 }
 
 void printStringNewLineSetSpacing(CGPDFScannerRef scanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	setWordSpacing(scanner, info);
 	setCharacterSpacing(scanner, info);
 	printStringNewLine(scanner, info);
 }
 
 void printStringsAndSpaces(CGPDFScannerRef pdfScanner, void *info) {
+#ifdef DEBUGLOG
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+#endif
 	CGPDFArrayRef array = getArray(pdfScanner);
 	for (int i = 0; i < CGPDFArrayGetCount(array); i++) {
 		CGPDFObjectRef pdfObject = getObject(array, i);
@@ -237,13 +293,21 @@ void pushRenderingState(CGPDFScannerRef pdfScanner, void *info)
 {
 	ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
 	RenderingState *state = [scanner.renderingState copy];
+    state.pageMatrix = scanner.pageMatrix;
 	[scanner.renderingStateStack pushRenderingState:state];
+#ifdef DEBUGLOG
+    NSLog(@"%s - CTM now a:%f b:%f c:%f d:%f   tx:%f ty:%f", __PRETTY_FUNCTION__, state.ctm.a, state.ctm.b, state.ctm.c, state.ctm.d, state.ctm.tx, state.ctm.ty);
+#endif
 }
 
 void popRenderingState(CGPDFScannerRef pdfScanner, void *info)
 {
 	ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
 	[scanner.renderingStateStack popRenderingState];
+#ifdef DEBUGLOG
+    RenderingState *state = scanner.renderingState;
+    NSLog(@"%s - CTM now a:%f b:%f c:%f d:%f   tx:%f ty:%f", __PRETTY_FUNCTION__, state.ctm.a, state.ctm.b, state.ctm.c, state.ctm.d, state.ctm.tx, state.ctm.ty);
+#endif
 }
 
 /* Update CTM */
@@ -252,4 +316,9 @@ void applyTransformation(CGPDFScannerRef pdfScanner, void *info)
 	ReaderContentScanner *scanner = (__bridge ReaderContentScanner *) info;
 	RenderingState *state = scanner.renderingState;
 	state.ctm = CGAffineTransformConcat(getTransform(pdfScanner), state.ctm);
+    state.pageMatrix = scanner.pageMatrix;
+#ifdef DEBUGLOG
+    NSLog(@"%s - CTM now a:%f b:%f c:%f d:%f   tx:%f ty:%f", __PRETTY_FUNCTION__, state.ctm.a, state.ctm.b, state.ctm.c, state.ctm.d, state.ctm.tx, state.ctm.ty);
+#endif
 }
+

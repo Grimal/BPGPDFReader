@@ -33,6 +33,14 @@
 
     if (pdfPage == NULL) { NSLog(@"%s - page is NULL, cannot scan", __PRETTY_FUNCTION__); return nil; }
     CGPDFPageRef scanningPage = CGPDFPageRetain(pdfPage);
+
+    // Need to consider the box sizes to ensure our overlays line up properly:
+//    CGRect mediaBox = CGPDFPageGetBoxRect(scanningPage,kCGPDFMediaBox);
+//    CGRect artBox = CGPDFPageGetBoxRect(scanningPage, kCGPDFArtBox);
+
+    _pageMatrix = CGAffineTransformIdentity;
+    [[self.renderingStateStack topRenderingState] setPageMatrix:_pageMatrix];
+
     CGPDFOperatorTableRef operatorTable = [self newOperatorTable];
     CGPDFContentStreamRef contentStream = CGPDFContentStreamCreateWithPage(scanningPage);
     CGPDFScannerRef scanner = CGPDFScannerCreate(contentStream, operatorTable, (__bridge void *)(self));
@@ -44,7 +52,7 @@
     CGPDFPageRelease(scanningPage);
 
     // we have all of our selections outlined here, draw link annotations for them:
-    NSLog(@"%s - Located %i part numbers", __PRETTY_FUNCTION__, (int)self.selections.count);
+//    NSLog(@"%s - Located %i part numbers", __PRETTY_FUNCTION__, (int)self.selections.count);
     return self.selections;
 }
 
@@ -76,10 +84,12 @@
     CGPDFOperatorTableSetCallback(operatorTable, "q", pushRenderingState);
     CGPDFOperatorTableSetCallback(operatorTable, "Q", popRenderingState);
 
-    CGPDFOperatorTableSetCallback(operatorTable, "BT", newParagraph);
+    CGPDFOperatorTableSetCallback(operatorTable, "BT", beginTextObject);
+    CGPDFOperatorTableSetCallback(operatorTable, "ET", endTextObject);
 
     return operatorTable;
 }
+
 
 /* Create a font dictionary given a PDF page */
 - (FontCollection *)fontCollectionWithPage:(CGPDFPageRef)page {
@@ -110,7 +120,11 @@
     possibleSelection = [Selection selectionWithState:self.renderingState];
     possibleSelection.text = [detector.unicodeContent stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     possibleSelection.finalState = self.renderingState;
-    [self.selections addObject:possibleSelection];
+    NSInteger textLength = [[possibleSelection.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] length];
+    if (textLength > 8)
+        NSLog(@"%s - Not adding a link for this, it probably isn't a number we care about: %@", __PRETTY_FUNCTION__, possibleSelection.text);
+    else if (textLength > 0)
+        [self.selections addObject:possibleSelection];
     possibleSelection = nil;
 }
 

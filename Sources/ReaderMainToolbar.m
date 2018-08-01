@@ -32,9 +32,12 @@
 @implementation ReaderMainToolbar
 {
     UIBarButtonItem *markButton;
-    
     UIImage *markImageN;
     UIImage *markImageY;
+
+    UIBarButtonItem *favoriteButton;
+    UIImage *addFavorite;
+    UIImage *removeFavorite;
 }
 
 @dynamic delegate;
@@ -100,7 +103,15 @@
             UIBarButtonItem *exportButton =[[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"Reader-Export"] style:UIBarButtonItemStylePlain target:self.delegate action:@selector(exportButtonTapped:)];
             [rightBarButtonItems addObject:exportButton];
         }
-        
+
+        // Document favorites
+        addFavorite = [UIImage imageNamed:@"addFavorite"];
+        removeFavorite = [UIImage imageNamed:@"removeFavorite"];
+
+        favoriteButton = [[UIBarButtonItem alloc] initWithImage:addFavorite style:UIBarButtonItemStylePlain target:self.delegate action:@selector(favoriteButtonTapped:)];
+        [rightBarButtonItems addObject:favoriteButton];
+        favoriteButton.enabled = YES; markButton.tag = NSIntegerMin;
+
 //        UINavigationItem *item = [[UINavigationItem alloc] initWithTitle:[document.fileName stringByDeletingPathExtension]];
         UINavigationItem *item = [[UINavigationItem alloc] init];
         item.leftBarButtonItems = leftBarButtonItems;
@@ -113,39 +124,41 @@
     return self;
 }
 
-- (void)setBookmarkState:(BOOL)state
-{
+- (void)setBookmarkState:(BOOL)state {
 #if (READER_BOOKMARKS == TRUE) // Option
-    
+
     if (state != markButton.tag) // Only if different state
     {
         if (self.hidden == NO) // Only if toolbar is visible
         {
             markButton.image = state ? markImageY : markImageN;
         }
-        
+
         markButton.tag = state; // Update bookmarked state tag
     }
-    
+
     if (markButton.enabled == NO) markButton.enabled = YES;
-    
+
 #endif // end of READER_BOOKMARKS Option
 }
-
-- (void)updateBookmarkImage
-{
+- (void)updateBookmarkImage {
 #if (READER_BOOKMARKS == TRUE) // Option
-    
+
     if (markButton.tag != NSIntegerMin) // Valid tag
     {
         BOOL state = markButton.tag; // Bookmarked state
-        
+
         markButton.image = state ? markImageY : markImageN;
     }
-    
+
     if (markButton.enabled == NO) markButton.enabled = YES;
-    
+
 #endif // end of READER_BOOKMARKS Option
+}
+
+- (void)setFavoriteState:(BOOL)state {
+    favoriteButton.image = state ? removeFavorite : addFavorite;
+    favoriteButton.tintColor = state ? [UIColor redColor] : nil;
 }
 
 - (void)hideToolbar
@@ -171,7 +184,7 @@
     if (self.hidden == YES)
     {
         [self updateBookmarkImage]; // First
-        
+
         [UIView animateWithDuration:0.25 delay:0.0
                             options:UIViewAnimationOptionCurveLinear | UIViewAnimationOptionAllowUserInteraction
                          animations:^(void)

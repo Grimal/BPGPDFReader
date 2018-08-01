@@ -410,7 +410,18 @@
             {
                 if (CGRectContainsPoint([link[@"Rect"] CGRectValue], point) == true) // Found it
                 {
-                    result = link[@"URI"]; break;
+                    if ([self.delegate respondsToSelector:@selector(linkSelectedWithText:atPoint:)]) {
+                        [self.delegate linkSelectedWithText:link[@"Text"] atPoint:point];
+                        return nil; // No default action processing since we used a delegate instead
+                    } else if ([link.allKeys containsObject:@"Text"]) {
+                        NSDecimalNumber *partNumber = [NSDecimalNumber decimalNumberWithString:link[@"Text"]];
+                        if (partNumber) {
+                            result = [NSString stringWithFormat:@"product::%08i", partNumber.intValue];
+                        }
+                    } else {
+                        result = link[@"URI"];
+                    }
+                    break;
                 }
             }
         }
@@ -522,34 +533,56 @@
         t = CGAffineTransformTranslate(t,0, -self.bounds.size.height);
         CGRect rectUIKit = CGRectApplyAffineTransform(frame, t);
 
-        NSLog(@"%s -\tPart number %@ is at %f, %f with a size of %fx%f", __PRETTY_FUNCTION__, selection.text, frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
+//        NSLog(@"%s -\tPart number %@ is at %f, %f with a size of %fx%f", __PRETTY_FUNCTION__, selection.text, frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
 
-        // Change the size because it's wrong:
-        rectUIKit.size.width = 25;
-        rectUIKit.origin.x -= 2.5;
+        // Set the size to be a function of font size and string length (because the text matrices always seem to be equal, thus width = 0):
+        NSInteger selectionLength = [[selection.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] length];
+        rectUIKit.size.width = (CGFloat)selectionLength * (CGFloat)4.2f;
+        rectUIKit.origin.x -= 1.0f;
+
+
+        // Add an orange box over the untranslated location for the part number
+//        UIView *partNumberLink2 = [[UIView alloc] initWithFrame:rectUIKit];
+//        partNumberLink2.autoresizesSubviews = NO;
+//        partNumberLink2.userInteractionEnabled = YES;
+//        partNumberLink2.contentMode = UIViewContentModeRedraw;
+//        partNumberLink2.autoresizingMask = UIViewAutoresizingNone;
+//        partNumberLink2.backgroundColor = [UIColor colorWithRed:1 green:0.3 blue:0 alpha:0.4];
+
+
+
+        // Adjust the view's position if the artBox and mediaBox aren't the same:
+        CGRect mediaBox = CGPDFPageGetBoxRect(_PDFPageRef, kCGPDFMediaBox);
+        CGRect artBox = CGPDFPageGetBoxRect(_PDFPageRef, kCGPDFArtBox);
+
+        CGAffineTransform pageTranslationMatrix = CGAffineTransformMakeTranslation(-(artBox.origin.x - mediaBox.origin.x), artBox.origin.y - mediaBox.origin.y);
+        if (!CGAffineTransformEqualToTransform(pageScanner.renderingState.ctm, pageTranslationMatrix) && (CGAffineTransformIsIdentity(pageScanner.renderingState.ctm))) {
+            rectUIKit = CGRectApplyAffineTransform(rectUIKit, pageTranslationMatrix);
+        }
 
         // Add a link annotation
         NSDictionary *linkDictionary = nil;
         @try {
-            if (![NSURL URLWithString:selection.text]) {
-                NSLog(@"%s - WTF, over?", __PRETTY_FUNCTION__);
-            }
-            linkDictionary = @{@"Rect": [NSValue valueWithCGRect:rectUIKit], @"URI": [NSURL URLWithString:[selection.text stringByTrimmingCharactersInSet:[[NSCharacterSet URLPathAllowedCharacterSet] invertedSet]] relativeToURL:[NSURL URLWithString:@"https://yoursite.com/Catalog/id/"]]};
+//            linkDictionary = @{@"Rect": [NSValue valueWithCGRect:rectUIKit], @"URI": [NSURL URLWithString:[selection.text stringByTrimmingCharactersInSet:[[NSCharacterSet URLPathAllowedCharacterSet] invertedSet]] relativeToURL:[NSURL URLWithString:@"https://shop.tifco.com/Catalog/id/"]]};
+            linkDictionary = @{@"Rect": [NSValue valueWithCGRect:rectUIKit], @"Text": selection.text};
             if (!_partNumberLinks) _partNumberLinks = [NSMutableArray new]; // Links list array
             [_partNumberLinks addObject:linkDictionary];
         } @catch (NSException *exception) {
-            NSLog(@"%s - Exception caught!  %@", __PRETTY_FUNCTION__, exception.description);   // J-29 will cause this
+            NSLog(@"%s - Exception caught (no part number links for you)!  %@", __PRETTY_FUNCTION__, exception.description);   // J-29 will cause this
         }
 
+        // Add yellow box over part numbers (if enabled)
+        if ([[TIFUserPreferences preferencesForCurrentUser] featureEnabled:@"Part Number Linking"]) {
+            UIView *partNumberLink = [[UIView alloc] initWithFrame:rectUIKit];
+            partNumberLink.autoresizesSubviews = NO;
+            partNumberLink.userInteractionEnabled = YES;
+            partNumberLink.contentMode = UIViewContentModeRedraw;
+            partNumberLink.autoresizingMask = UIViewAutoresizingNone;
+            partNumberLink.backgroundColor = [UIColor colorWithRed:1 green:0.8 blue:0 alpha:0.4];
 
-        UIView *partNumberLink = [[UIView alloc] initWithFrame:rectUIKit];
-        partNumberLink.autoresizesSubviews = NO;
-        partNumberLink.userInteractionEnabled = YES;
-        partNumberLink.contentMode = UIViewContentModeRedraw;
-        partNumberLink.autoresizingMask = UIViewAutoresizingNone;
-        partNumberLink.backgroundColor = [UIColor colorWithRed:1 green:0.8 blue:0 alpha:0.4];
-
-        [self addSubview:partNumberLink];
+            [self addSubview:partNumberLink];
+        }
+//        [self addSubview:partNumberLink2];
 
     }
 

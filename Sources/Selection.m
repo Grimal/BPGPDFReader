@@ -17,7 +17,7 @@ CGFloat horizontal(CGAffineTransform transform) {
 
 - (CGAffineTransform)transform
 {
-	return CGAffineTransformConcat([self.initialState textMatrix], [self.initialState ctm]);
+    return CGAffineTransformConcat([self.initialState pageMatrix], CGAffineTransformConcat([self.initialState textMatrix], [self.initialState ctm]));
 }
 
 - (CGRect)frame

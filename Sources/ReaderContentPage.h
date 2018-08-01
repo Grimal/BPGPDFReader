@@ -25,8 +25,14 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol ReaderContentPageDelegate <NSObject>
+@optional
+- (void)linkSelectedWithText:(NSString *)linkText atPoint:(CGPoint)point;
+@end
+
 @interface ReaderContentPage : UIView
 
+@property (nonatomic, strong) id <ReaderContentPageDelegate> delegate;
 - (instancetype)initWithURL:(NSURL *)fileURL page:(NSInteger)page password:(NSString *)phrase;
 
 - (id)processSingleTap:(UITapGestureRecognizer *)recognizer;

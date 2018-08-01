@@ -26,11 +26,12 @@
 #import "ReaderConstants.h"
 #import "ReaderViewController.h"
 #import "ThumbsViewController.h"
-#import "ReaderMainToolbar.h"
+//#import "ReaderMainToolbar.h"
 #import "ReaderMainPagebar.h"
 #import "ReaderContentView.h"
 #import "ReaderThumbCache.h"
 #import "ReaderThumbQueue.h"
+#import "PricingTableViewController.h"
 
 #import <MessageUI/MessageUI.h>
 
@@ -121,7 +122,7 @@
 	}
 
 	[mainToolbar setBookmarkState:[document.bookmarks containsIndex:page]];
-
+    [mainToolbar setFavoriteState:NO];
 	[mainPagebar updatePagebar]; // Update page bar
 }
 
@@ -491,6 +492,7 @@
     {
         [self updateContentViews:theScrollView]; lastAppearSize = CGSizeZero;
     }
+    if ([self.delegate respondsToSelector:@selector(documentFavoriteState:toolbar:)]) [self.delegate documentFavoriteState:self toolbar:mainToolbar];
 }
 
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration
@@ -617,6 +619,28 @@
 
 						[self showDocumentPage:number]; // Show the page
 					}
+                    else if ([target isKindOfClass:NSString.class]) {
+                        if ([target rangeOfString:@"product::"].location != NSNotFound) {
+                            NSLog(@"%s - Touched document annotation for %@", __PRETTY_FUNCTION__, target);
+                            TIFProduct *product = [TIFProduct modelForDocument:[[TIFCouchbase sharedInstance] couchbaseDB][target]];
+                            if (product) {
+                                // Display pricing popover:
+                                PricingTableViewController *pricingTVC = [[UIStoryboard storyboardWithName:@"DocumentsStoryboard" bundle:nil] instantiateViewControllerWithIdentifier:@"PricingTableView"];
+                                if (pricingTVC) {
+                                    pricingTVC.modalInPopover = NO;
+                                    pricingTVC.modalPresentationStyle = UIModalPresentationPopover;
+                                    pricingTVC.preferredContentSize = CGSizeMake(320, 360);
+                                    pricingTVC.product = product;
+
+                                    UIPopoverPresentationController *popPC = pricingTVC.popoverPresentationController;
+                                    popPC.permittedArrowDirections = UIPopoverArrowDirectionAny;
+                                    pricingTVC.popoverPresentationController.sourceView = self.view;
+                                    pricingTVC.popoverPresentationController.sourceRect = CGRectMake(point.x, point.y, 1, 1);
+                                    [self presentViewController:pricingTVC animated:YES completion:nil];
+                                }
+                            }
+                        }
+                    }
 				}
 			}
 			else // Nothing active tapped in the target content view
@@ -847,18 +871,23 @@
 {
 #if (READER_BOOKMARKS == TRUE) // Option
 
-	if (printInteraction != nil) [printInteraction dismissAnimated:YES];
+    if (printInteraction != nil) [printInteraction dismissAnimated:YES];
 
-	if ([document.bookmarks containsIndex:currentPage]) // Remove bookmark
-	{
-		[document.bookmarks removeIndex:currentPage]; [mainToolbar setBookmarkState:NO];
-	}
-	else // Add the bookmarked page number to the bookmark index set
-	{
-		[document.bookmarks addIndex:currentPage]; [mainToolbar setBookmarkState:YES];
-	}
+    if ([document.bookmarks containsIndex:currentPage]) // Remove bookmark
+    {
+        [document.bookmarks removeIndex:currentPage]; [mainToolbar setBookmarkState:NO];
+    }
+    else // Add the bookmarked page number to the bookmark index set
+    {
+        [document.bookmarks addIndex:currentPage]; [mainToolbar setBookmarkState:YES];
+    }
 
 #endif // end of READER_BOOKMARKS Option
+}
+
+- (void)favoriteButtonTapped:(UIBarButtonItem *)button
+{
+    if ([self.delegate respondsToSelector:@selector(toggleDocumentFavorite:toolbar:)]) [self.delegate toggleDocumentFavorite:self toolbar:mainToolbar];
 }
 
 #pragma mark - MFMailComposeViewControllerDelegate methods

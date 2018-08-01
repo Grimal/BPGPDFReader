@@ -38,6 +38,7 @@
 - (void)printButtonTapped:(UIBarButtonItem *)button;
 - (void)emailButtonTapped:(UIBarButtonItem *)button;
 - (void)markButtonTapped:(UIBarButtonItem *)button;
+- (void)favoriteButtonTapped:(UIBarButtonItem *)button;
 
 @end
 
@@ -48,6 +49,7 @@
 - (instancetype)initWithFrame:(CGRect)frame document:(ReaderDocument *)document;
 
 - (void)setBookmarkState:(BOOL)state;
+- (void)setFavoriteState:(BOOL)state;
 
 - (void)hideToolbar;
 - (void)showToolbar;
